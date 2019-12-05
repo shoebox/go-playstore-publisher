@@ -47,8 +47,7 @@ func NewClient(serviceAccountFile string) (*Client, error) {
 }
 
 func initClient(http *http.Client) (*Client, error) {
-	ctx := context.Background()
-	service, err := androidpublisher.NewService(ctx, option.WithHTTPClient(http))
+	service, err := androidpublisher.NewService(context.Background(), option.WithHTTPClient(http))
 	if err != nil {
 		return nil, err
 	}
