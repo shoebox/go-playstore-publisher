@@ -34,22 +34,24 @@ func NewClient(serviceAccountFile string) (*Client, error) {
 		return nil, err
 	}
 
-	sa, err := resolveServiceAccount(file)
+	httpClient, err := resolveServiceAccount(file)
 	if err != nil {
 		return nil, err
 	}
 
 	//
-	service, err := androidpublisher.New(sa)
+	return initClient(httpClient)
+}
+
+func initClient(http *http.Client) (*Client, error) {
+	service, err := androidpublisher.New(http)
 	if err != nil {
 		return nil, err
 	}
 
-	client := &Client{}
-	client.service = service
+	client := &Client{service: service}
 	client.ListService = &ListApkService{client: client, editService: service.Edits}
 	client.UploadService = &UploadApkService{client: client}
-
 	return client, nil
 }
 
