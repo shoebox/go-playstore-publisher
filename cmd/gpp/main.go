@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/shoebox/go-playstore-publisher/playpublisher"
+	"go-playstore-publisher/playpublisher"
 )
 
 func main() {
