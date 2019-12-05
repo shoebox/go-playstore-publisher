@@ -3,6 +3,7 @@ package playpublisher
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -82,5 +83,15 @@ func TestInputServiceAccount(t *testing.T) {
 
 		assert.Equal(t, jwt.Email, fakeEmail)
 		assert.Equal(t, jwt.PrivateKey, []byte(fakePrivateKey))
+	})
+}
+
+func TestInitClient(t *testing.T) {
+	h := http.Client{}
+
+	t.Run("Create new client should work without error", func(t *testing.T) {
+		client, err := initClient(&h)
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
 	})
 }

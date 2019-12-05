@@ -1,6 +1,7 @@
 package playpublisher
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,6 +13,8 @@ import (
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/androidpublisher/v3"
+
+	option "google.golang.org/api/option"
 )
 
 // Token structure
@@ -34,22 +37,24 @@ func NewClient(serviceAccountFile string) (*Client, error) {
 		return nil, err
 	}
 
-	sa, err := resolveServiceAccount(file)
+	httpClient, err := resolveServiceAccount(file)
 	if err != nil {
 		return nil, err
 	}
 
 	//
-	service, err := androidpublisher.New(sa)
+	return initClient(httpClient)
+}
+
+func initClient(http *http.Client) (*Client, error) {
+	service, err := androidpublisher.NewService(context.Background(), option.WithHTTPClient(http))
 	if err != nil {
 		return nil, err
 	}
 
-	client := &Client{}
-	client.service = service
+	client := &Client{service: service}
 	client.ListService = &ListApkService{client: client, editService: service.Edits}
 	client.UploadService = &UploadApkService{client: client}
-
 	return client, nil
 }
 
@@ -62,7 +67,10 @@ func resolveServiceAccount(reader io.Reader) (*http.Client, error) {
 
 	// Unmarshal the token file
 	var token Token
-	json.Unmarshal(b, &token)
+	err = json.Unmarshal(b, &token)
+	if err != nil {
+		return nil, err
+	}
 
 	//
 	jwt, err := tokenToJwt(token)
