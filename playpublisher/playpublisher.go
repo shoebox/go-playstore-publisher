@@ -64,7 +64,10 @@ func resolveServiceAccount(reader io.Reader) (*http.Client, error) {
 
 	// Unmarshal the token file
 	var token Token
-	json.Unmarshal(b, &token)
+	err = json.Unmarshal(b, &token)
+	if err != nil {
+		return nil, err
+	}
 
 	//
 	jwt, err := tokenToJwt(token)
