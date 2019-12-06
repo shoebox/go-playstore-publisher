@@ -102,10 +102,11 @@ func TestInitClient(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, client)
 	})
+}
 
-	t.Run("Client init should fail in case of null client", func(t *testing.T) {
-		client, err := initClient(nil)
-		assert.Error(t, err, "google: could not find default credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.")
-		assert.Nil(t, client)
-	})
+func TestFailClientInit(t *testing.T) {
+	client, err := initClient(nil)
+
+	assert.Error(t, err, "google: could not find default credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.")
+	assert.Nil(t, client)
 }
