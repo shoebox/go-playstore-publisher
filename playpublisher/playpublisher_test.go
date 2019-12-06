@@ -62,6 +62,14 @@ func TestServiceAccountResolutio(t *testing.T) {
 		assert.NotNil(t, c)
 		assert.NoError(t, err)
 	})
+
+	t.Run("JWT Token parsing failing should report error", func(t *testing.T) {
+		json := fmt.Sprintf("{\"client_email\":\"%v\"}", fakeEmail)
+
+		c, err := resolveServiceAccount(strings.NewReader(json))
+		assert.Nil(t, c)
+		assert.Error(t, err, "Invalid token file payload")
+	})
 }
 
 func TestInputServiceAccount(t *testing.T) {
@@ -93,5 +101,11 @@ func TestInitClient(t *testing.T) {
 		client, err := initClient(&h)
 		assert.NoError(t, err)
 		assert.NotNil(t, client)
+	})
+
+	t.Run("Client init should fail in case of null client", func(t *testing.T) {
+		client, err := initClient(nil)
+		assert.Error(t, err, "google: could not find default credentials. See https://developers.google.com/accounts/docs/application-default-credentials for more information.")
+		assert.Nil(t, client)
 	})
 }
