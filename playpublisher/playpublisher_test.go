@@ -102,5 +102,11 @@ func TestInitClient(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, client)
 	})
-}
 
+	t.Run("Create new client with invalid file should throw an error", func(t *testing.T) {
+		client, err := NewClient("toto.json")
+		fmt.Println(err)
+		assert.Error(t, err, "pen toto.json: no such file or directory")
+		assert.Nil(t, client)
+	})
+}

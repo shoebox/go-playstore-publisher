@@ -40,6 +40,10 @@ func (s *UploadApkService) Upload(packageName string, path string, track string)
 	return s.validateAndCommtEdit(packageName, edit)
 }
 
+func validate(packageName string, path string, track string) error {
+	return nil
+}
+
 func (s *UploadApkService) createEdit(packageName string) (*androidpublisher.AppEdit, error) {
 	edit, err := s.client.service.Edits.Insert(packageName, nil).Do()
 	if err != nil {
