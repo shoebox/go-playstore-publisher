@@ -6,6 +6,9 @@ deps:
 build:
 	go build -o ${APP} cmd/gpp/main.go
 
+install:
+	CGO_ENABLED=0 go install ./cmd/gpp/main.go
+
 run:
 	go run -race cmd/gpp/main.go
 

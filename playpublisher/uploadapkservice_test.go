@@ -4,6 +4,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MyMockedObject struct {
+type MyMockHelper struct {
 	mock.Mock
 }

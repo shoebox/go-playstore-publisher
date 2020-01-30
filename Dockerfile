@@ -1,36 +1,38 @@
 # Dockerfile References: https://docs.docker.com/engine/reference/builder/
+#
+# Cert stage
+FROM alpine:latest as certs
+RUN apk --update add ca-certificates
 
-# Start from the latest golang base image
-# FROM golang:1.13.1-alpine
+# Builder stage
+FROM golang:1.13.4-alpine3.10 as builder
+
+# Output dir
+RUN mkdir -p /build
 
 # Set the Current Working Directory inside the container
-# WORKDIR /app
+WORKDIR /build
 
-# Copy go mod and sum files
-# COPY go.mod go.sum ./
+# Copy mod file inside the container
+COPY go.mod .
 
-# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
-# RUN go mod download
+# Copy sum file inside the contaner
+COPY go.sum .
 
-# Copy the source from the current directory to the Working Directory inside the container
-# COPY . .
+# Download dependencies
+RUN go mod download
 
-# Build the Go app
-# RUN make build
+# Copy source inside the container
+COPY . .
 
-# Command to run the executable
-# CMD ["./go-play-publisher"]
+# Compile output
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -installsuffix cgo -o /bin/go-play-publisher cmd/gpp/main.go
 
+# Thin stage
+FROM scratch
+ENV PATH=/bin
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=builder /bin/go-play-publisher /bin/go-play-publisher
 
-FROM golang:alpine as builder
-RUN mkdir /build 
-ADD . /build/
-WORKDIR /build 
-RUN go build -o main .
-
-FROM alpine
-RUN adduser -S -D -H -h /app appuser
-USER appuser
-COPY --from=builder /build/main /app/
-WORKDIR /app
-CMD ["./main"]
+CMD ["/bin/go-play-publisher"]
+ENTRYPOINT ["/bin/go-play-publisher"]

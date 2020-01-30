@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"go-playstore-publisher/playpublisher"
@@ -9,22 +9,27 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var apkFilePath string
+var serviceAccountFilePath string
+var packageNameID string
+
 func main() {
 	app := initCli()
 	err := app.Run(os.Args)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 }
 
 func initCli() *cli.App {
 	return &cli.App{
 		Commands: getCommands(),
+		Flags:    getFlags(),
 		Name:     "go-play-publisher",
 		Usage:    "Go - PlayStore Publisher",
-		Flags:    getFlags(),
 		Action: func(c *cli.Context) error {
+			fmt.Println("c :::", c)
 			return nil
 		},
 	}
@@ -33,30 +38,32 @@ func initCli() *cli.App {
 func getCommands() []*cli.Command {
 	return []*cli.Command{
 		{
-			Name:  "list",
-			Usage: "List upload APK into the application in the Play Store",
-			Action: func(c *cli.Context) error {
-				client, err := getClient(c)
-				if err != nil {
-					return err
-				}
-				return client.ListService.List(c.Args().First())
-			},
+			Name:   "list",
+			Usage:  "List upload APK into the application in the Play Store",
+			Action: actionListApk,
 		},
 		{
-			Name:  "upload",
-			Usage: "Upload APK binary to the PlayStore",
-			Action: func(c *cli.Context) error {
-				client, err := getClient(c)
-				if err != nil {
-				}
+			Flags:  getUploadFlags(),
+			Name:   "upload",
+			Usage:  "Upload APK binary to the PlayStore",
+			Action: actionUploadApk,
+		},
+	}
+}
 
-				args := c.Args()
-
-				return client.UploadService.Upload(args.First(),
-					args.Get(1),
-					args.Get(2))
-			},
+func getUploadFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.StringFlag{
+			Destination: &apkFilePath,
+			Name:        "apkFile",
+			Required:    true,
+			Usage:       "The path to the APK to upload",
+		},
+		&cli.StringFlag{
+			Destination: &packageNameID,
+			Name:        "packageNameID",
+			Required:    true,
+			Usage:       "The package name ID",
 		},
 	}
 }
@@ -64,30 +71,36 @@ func getCommands() []*cli.Command {
 func getFlags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
-			Name:     "serviceAccountFile",
-			Required: true,
-			Usage:    "The Play publisher service account",
+			Destination: &serviceAccountFilePath,
+			Name:        "serviceAccountFile",
+			Required:    true,
+			Usage:       "The Play publisher service account file",
 		},
 	}
 }
 
-func getClient(c *cli.Context) (*playpublisher.Client, error) {
-	return playpublisher.NewClient(c.String("serviceAccountFile"))
-}
-
-/*
-app.Commands = []*cli.Command{
-		&cli.Command{
-			Name: "upload",
-			Flags: []cli.Flag{
-				&cli.PathFlag{Name: "file",
-					Aliases:  []string{"f"},
-					Required: true},
-			},
-			Action: executeUpload,
-		},
+func actionListApk(c *cli.Context) error {
+	fmt.Println("actionListApk")
+	client, err := playpublisher.NewClient(serviceAccountFilePath)
+	if err != nil {
+		return err
 	}
 
-
+	return client.ListService.List(c.Args().First())
 }
-*/
+
+func actionUploadApk(c *cli.Context) error {
+	client, err := playpublisher.NewClient(serviceAccountFilePath)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Open(apkFilePath)
+
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return client.UploadService.Upload(packageNameID, file, "alpha")
+}
