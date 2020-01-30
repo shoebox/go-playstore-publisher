@@ -3,7 +3,7 @@ language: go
 go_import_path: github.com/shoebox/go-playstore-publisher
 
 go:
-  - 1.13.x
+  - 1.13.1
 
 before_install:
   - go get -t -v ./...
@@ -13,6 +13,7 @@ install:
   - go get -v -t ./...
 
 script:
+  - go clean -testcache
   - go test go-playstore-publisher/playpublisher -coverprofile=coverage.txt -covermode=atomic
 
 after_success:

@@ -25,7 +25,7 @@ type Token struct {
 
 // Client structure
 type Client struct {
-	service       *androidpublisher.Service
+	Helper        *AndroidPublisherHelper
 	ListService   *ListApkService
 	UploadService *UploadApkService
 }
@@ -52,8 +52,9 @@ func initClient(http *http.Client) (*Client, error) {
 		return nil, err
 	}
 
-	client := &Client{service: service}
-	client.ListService = &ListApkService{client: client, editService: service.Edits}
+	client := &Client{}
+	client.Helper = NewHelper(service)
+	client.ListService = &ListApkService{helper: client.Helper}
 	client.UploadService = &UploadApkService{client: client}
 	return client, nil
 }

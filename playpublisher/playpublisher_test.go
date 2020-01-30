@@ -62,6 +62,14 @@ func TestServiceAccountResolutio(t *testing.T) {
 		assert.NotNil(t, c)
 		assert.NoError(t, err)
 	})
+
+	t.Run("JWT Token parsing failing should report error", func(t *testing.T) {
+		json := fmt.Sprintf("{\"client_email\":\"%v\"}", fakeEmail)
+
+		c, err := resolveServiceAccount(strings.NewReader(json))
+		assert.Nil(t, c)
+		assert.Error(t, err, "Invalid token file payload")
+	})
 }
 
 func TestInputServiceAccount(t *testing.T) {
@@ -93,5 +101,12 @@ func TestInitClient(t *testing.T) {
 		client, err := initClient(&h)
 		assert.NoError(t, err)
 		assert.NotNil(t, client)
+	})
+
+	t.Run("Create new client with invalid file should throw an error", func(t *testing.T) {
+		client, err := NewClient("toto.json")
+		fmt.Println(err)
+		assert.Error(t, err, "pen toto.json: no such file or directory")
+		assert.Nil(t, client)
 	})
 }
