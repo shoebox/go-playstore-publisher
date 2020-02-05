@@ -29,8 +29,11 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -installsuffix cgo -o /bin/go-play-publisher cmd/gpp/main.go
 
 # Thin stage
-FROM scratch
+FROM alpine:3.11.3
+RUN apk add --no-cache ca-certificates openssl
+
 ENV PATH=/bin
+
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /bin/go-play-publisher /bin/go-play-publisher
 

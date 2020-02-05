@@ -80,7 +80,6 @@ func getFlags() []cli.Flag {
 }
 
 func actionListApk(c *cli.Context) error {
-	fmt.Println("actionListApk")
 	client, err := playpublisher.NewClient(serviceAccountFilePath)
 	if err != nil {
 		return err
