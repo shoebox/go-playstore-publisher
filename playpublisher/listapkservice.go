@@ -6,7 +6,7 @@ import (
 
 // ListApkService definition
 type ListApkService struct {
-	helper *AndroidPublisherHelper
+	helper Helper
 }
 
 // List allows to list all the APK for the target bundle identifier into the PlayStore account
@@ -18,7 +18,7 @@ func (s *ListApkService) List(packageName string) error {
 		return err
 	}
 
-	apks, err := s.helper.listApk(packageName, editID)
+	apks, err := s.helper.listApk(packageName, *editID)
 	if err != nil {
 		return err
 	}

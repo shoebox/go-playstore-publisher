@@ -25,7 +25,7 @@ type Token struct {
 
 // Client structure
 type Client struct {
-	Helper        *AndroidPublisherHelper
+	Helper        Helper
 	ListService   *ListApkService
 	UploadService *UploadApkService
 }

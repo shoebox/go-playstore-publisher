@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"go-playstore-publisher/playpublisher"
 
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -14,11 +14,16 @@ var serviceAccountFilePath string
 var packageNameID string
 
 func main() {
+	logr.SetFormatter(&logr.TextFormatter{
+		DisableTimestamp: true,
+		FullTimestamp:    true,
+	})
+
 	app := initCli()
 	err := app.Run(os.Args)
 
 	if err != nil {
-		fmt.Println(err)
+		logr.Error(err)
 	}
 }
 
@@ -29,7 +34,6 @@ func initCli() *cli.App {
 		Name:     "go-play-publisher",
 		Usage:    "Go - PlayStore Publisher",
 		Action: func(c *cli.Context) error {
-			fmt.Println("c :::", c)
 			return nil
 		},
 	}

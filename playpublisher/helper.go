@@ -9,9 +9,15 @@ import (
 )
 
 type Helper interface {
-	createEdit(packageName string) (string, error)
+	commitEdit(packageNameID string, editID string) error
+	createEdit(packageName string) (*androidpublisher.AppEdit, error)
+	createReleaseToTrack(changeLog string, versionCode int64, userFraction float64) *androidpublisher.TrackRelease
+	initiateUpload(reader io.Reader, packageNameID string, editID string, contentType string) (*androidpublisher.Apk, error)
 	insertEdit(packageNameID string) (*string, error)
 	listApk(packageNameID string, editID string) ([]*androidpublisher.Apk, error)
+	releaseApkToTrack(packageNameID string, apk *androidpublisher.Apk, editID string, track *androidpublisher.Track, release *androidpublisher.TrackRelease) error
+	resolveTrackName(packageNameID string, editID string, trackName string) (*androidpublisher.Track, error)
+	validateEdit(packageNameID string, editID string) error
 }
 
 type AndroidPublisherHelper struct {
@@ -20,17 +26,15 @@ type AndroidPublisherHelper struct {
 	editTrackService *androidpublisher.EditsTracksService
 }
 
-func NewHelper(service *androidpublisher.Service) *AndroidPublisherHelper {
-	res := AndroidPublisherHelper{
+func NewHelper(service *androidpublisher.Service) Helper {
+	return AndroidPublisherHelper{
 		service:          service,
 		editService:      androidpublisher.NewEditsService(service),
 		editTrackService: androidpublisher.NewEditsTracksService(service),
 	}
-
-	return &res
 }
 
-func (h *AndroidPublisherHelper) createEdit(packageNameId string) (*androidpublisher.AppEdit, error) {
+func (h AndroidPublisherHelper) createEdit(packageNameId string) (*androidpublisher.AppEdit, error) {
 	edit, err := h.service.Edits.Insert(packageNameId, nil).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create the edit (Error: %v)", err)
@@ -39,7 +43,7 @@ func (h *AndroidPublisherHelper) createEdit(packageNameId string) (*androidpubli
 	return edit, nil
 }
 
-func (h *AndroidPublisherHelper) insertEdit(packageNameId string) (*string, error) {
+func (h AndroidPublisherHelper) insertEdit(packageNameId string) (*string, error) {
 	edit, err := h.createEdit(packageNameId)
 	if err != nil {
 		return nil, err
@@ -47,9 +51,8 @@ func (h *AndroidPublisherHelper) insertEdit(packageNameId string) (*string, erro
 	return &edit.Id, nil
 }
 
-func (h *AndroidPublisherHelper) listApk(packageNameID string,
-	editID *string) ([]*androidpublisher.Apk, error) {
-	call, err := h.service.Edits.Apks.List(packageNameID, *editID).Do()
+func (h AndroidPublisherHelper) listApk(packageNameID string, editID string) ([]*androidpublisher.Apk, error) {
+	call, err := h.service.Edits.Apks.List(packageNameID, editID).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +60,7 @@ func (h *AndroidPublisherHelper) listApk(packageNameID string,
 	return call.Apks, nil
 }
 
-func (h *AndroidPublisherHelper) initiateUpload(reader io.Reader,
+func (h AndroidPublisherHelper) initiateUpload(reader io.Reader,
 	packageNameID string,
 	editID string,
 	contentType string) (*androidpublisher.Apk, error) {
@@ -65,13 +68,13 @@ func (h *AndroidPublisherHelper) initiateUpload(reader io.Reader,
 
 	apk, err := edit.Media(reader, googleapi.ContentType(contentType)).Do()
 	if err != nil {
-		return nil, fmt.Errorf("Falied to initiate upload (Error: %v)", err)
+		return nil, fmt.Errorf("Failed to initiate upload (Error: %v)", err)
 	}
 
 	return apk, nil
 }
 
-func (h *AndroidPublisherHelper) resolveTrackName(packageNameID string,
+func (h AndroidPublisherHelper) resolveTrackName(packageNameID string,
 	editID string,
 	trackName string) (*androidpublisher.Track, error) {
 
@@ -89,7 +92,7 @@ func (h *AndroidPublisherHelper) resolveTrackName(packageNameID string,
 	return nil, fmt.Errorf("could not find track with name %s", trackName)
 }
 
-func (h *AndroidPublisherHelper) createReleaseToTrack(changeLog string,
+func (h AndroidPublisherHelper) createReleaseToTrack(changeLog string,
 	versionCode int64,
 	userFraction float64) *androidpublisher.TrackRelease {
 
@@ -109,7 +112,7 @@ func (h *AndroidPublisherHelper) createReleaseToTrack(changeLog string,
 	return newRelease
 }
 
-func (h *AndroidPublisherHelper) releaseApkToTrack(packageNameID string,
+func (h AndroidPublisherHelper) releaseApkToTrack(packageNameID string,
 	apk *androidpublisher.Apk,
 	editID string,
 	track *androidpublisher.Track,
@@ -126,7 +129,7 @@ func (h *AndroidPublisherHelper) releaseApkToTrack(packageNameID string,
 	return nil
 }
 
-func (h *AndroidPublisherHelper) validateEdit(packageNameID string, editID string) error {
+func (h AndroidPublisherHelper) validateEdit(packageNameID string, editID string) error {
 	_, err := h.editService.Validate(packageNameID, editID).Do()
 	if err != nil {
 		return fmt.Errorf("Failed to validate release. Error: %v", err)
@@ -135,7 +138,7 @@ func (h *AndroidPublisherHelper) validateEdit(packageNameID string, editID strin
 	return nil
 }
 
-func (h *AndroidPublisherHelper) commitEdit(packageNameID string, editID string) error {
+func (h AndroidPublisherHelper) commitEdit(packageNameID string, editID string) error {
 
 	appEdit, err := h.editService.Commit(packageNameID, editID).Do()
 	fmt.Println(appEdit, err)
