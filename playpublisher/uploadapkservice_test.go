@@ -2,6 +2,7 @@ package playpublisher
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -56,5 +57,23 @@ func TestCreateEdit(t *testing.T) {
 
 		// and:
 		hm.AssertExpectations(t)
+	})
+}
+
+func TestUploadBinary(t *testing.T) {
+	subject.editID = "123456XYZ"
+
+	t.Run("Binary upload should handle errors", func(t *testing.T) {
+		// setup:
+		setupMock()
+		subject.packageNameID = "co.test.testing"
+		reader := strings.NewReader("Hello world")
+
+		hm.On("initiateUpload", reader, subject.packageNameID, subject.editID, "application/vnd.android.package-archive").
+			Return(nil, fmt.Errorf("Test error"))
+
+		edit, err := subject.uploadBinary(subject.packageNameID, reader)
+		assert.EqualError(t, err, "Test error")
+		assert.Nil(t, edit)
 	})
 }

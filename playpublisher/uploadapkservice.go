@@ -51,6 +51,9 @@ func (s *UploadApkService) Upload(id string,
 
 	// Resolve track
 	track, err := s.resolveTrack(s.packageNameID, trackName)
+	if err != nil {
+		return err
+	}
 
 	// Release APK to track
 	err = s.releaseApkToTrack(apk, track, release)
