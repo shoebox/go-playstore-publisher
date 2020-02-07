@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/api/androidpublisher/v3"
 )
 
 var (
@@ -62,12 +63,12 @@ func TestCreateEdit(t *testing.T) {
 
 func TestUploadBinary(t *testing.T) {
 	subject.editID = "123456XYZ"
+	reader := strings.NewReader("Hello world")
 
 	t.Run("Binary upload should handle errors", func(t *testing.T) {
 		// setup:
 		setupMock()
 		subject.packageNameID = "co.test.testing"
-		reader := strings.NewReader("Hello world")
 
 		hm.On("initiateUpload", reader, subject.packageNameID, subject.editID, "application/vnd.android.package-archive").
 			Return(nil, fmt.Errorf("Test error"))
@@ -75,5 +76,20 @@ func TestUploadBinary(t *testing.T) {
 		edit, err := subject.uploadBinary(subject.packageNameID, reader)
 		assert.EqualError(t, err, "Test error")
 		assert.Nil(t, edit)
+	})
+
+	t.Run("Binary upload should return apk", func(t *testing.T) {
+		// setup:
+		setupMock()
+		subject.packageNameID = "co.test.testing"
+
+		a := &androidpublisher.Apk{VersionCode: 1234}
+
+		hm.On("initiateUpload", reader, subject.packageNameID, subject.editID, "application/vnd.android.package-archive").
+			Return(a, nil)
+
+		apk, err := subject.uploadBinary(subject.packageNameID, reader)
+		assert.EqualValues(t, apk, apk)
+		assert.NoError(t, err)
 	})
 }
