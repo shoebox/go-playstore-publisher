@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"go-playstore-publisher/playpublisher"
@@ -18,7 +19,7 @@ func main() {
 	err := app.Run(os.Args)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 }
 
@@ -95,7 +96,6 @@ func actionUploadApk(c *cli.Context) error {
 	}
 
 	file, err := os.Open(apkFilePath)
-
 	if err != nil {
 		return err
 	}
