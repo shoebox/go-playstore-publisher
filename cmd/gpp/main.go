@@ -39,17 +39,15 @@ func initCli() *cli.App {
 func getCommands() []*cli.Command {
 	return []*cli.Command{
 		{
-			Name:         "list",
-			Usage:        "List upload APK into the application in the Play Store",
-			Action:       actionListApk,
-			OnUsageError: onActionError,
+			Name:   "list",
+			Usage:  "List upload APK into the application in the Play Store",
+			Action: actionListApk,
 		},
 		{
-			Flags:        getUploadFlags(),
-			Name:         "upload",
-			Usage:        "Upload APK binary to the PlayStore",
-			Action:       actionUploadApk,
-			OnUsageError: onActionError,
+			Flags:  getUploadFlags(),
+			Name:   "upload",
+			Usage:  "Upload APK binary to the PlayStore",
+			Action: actionUploadApk,
 		},
 	}
 }
@@ -104,9 +102,4 @@ func actionUploadApk(c *cli.Context) error {
 	defer file.Close()
 
 	return client.UploadService.Upload(packageNameID, file, "alpha")
-}
-
-func onActionError(context *cli.Context, err error, isSubcommand bool) error {
-	fmt.Println(" >>> ", err)
-	return err
 }
