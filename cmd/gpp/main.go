@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"go-playstore-publisher/playpublisher"
@@ -18,7 +19,7 @@ func main() {
 	err := app.Run(os.Args)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 }
 
@@ -38,15 +39,17 @@ func initCli() *cli.App {
 func getCommands() []*cli.Command {
 	return []*cli.Command{
 		{
-			Name:   "list",
-			Usage:  "List upload APK into the application in the Play Store",
-			Action: actionListApk,
+			Name:         "list",
+			Usage:        "List upload APK into the application in the Play Store",
+			Action:       actionListApk,
+			OnUsageError: onActionError,
 		},
 		{
-			Flags:  getUploadFlags(),
-			Name:   "upload",
-			Usage:  "Upload APK binary to the PlayStore",
-			Action: actionUploadApk,
+			Flags:        getUploadFlags(),
+			Name:         "upload",
+			Usage:        "Upload APK binary to the PlayStore",
+			Action:       actionUploadApk,
+			OnUsageError: onActionError,
 		},
 	}
 }
@@ -95,11 +98,15 @@ func actionUploadApk(c *cli.Context) error {
 	}
 
 	file, err := os.Open(apkFilePath)
-
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
 	return client.UploadService.Upload(packageNameID, file, "alpha")
+}
+
+func onActionError(context *cli.Context, err error, isSubcommand bool) error {
+	fmt.Println(" >>> ", err)
+	return err
 }

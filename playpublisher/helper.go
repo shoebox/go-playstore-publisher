@@ -31,7 +31,7 @@ func NewHelper(service *androidpublisher.Service) *AndroidPublisherHelper {
 }
 
 func (h *AndroidPublisherHelper) createEdit(packageNameId string) (*androidpublisher.AppEdit, error) {
-	edit, err := h.service.Edits.Insert(packageNameId, nil).Do()
+	edit, err := h.service.Edits.Insert(packageNameId, &androidpublisher.AppEdit{}).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create the edit (Error: %v)", err)
 	}
